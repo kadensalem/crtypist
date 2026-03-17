@@ -1,0 +1,11 @@
+.micromamba/
+.venv/
+outputs/
+kbd1k/
+bin/
+lib/
+info/
+micromamba.tar.bz2
+__pycache__/
+*.pyc
+.DS_Store

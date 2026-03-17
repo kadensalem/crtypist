@@ -1,0 +1,35 @@
+numpy
+wandb
+gymnasium==0.28.1
+pygame>=2.1.2
+einops
+stable-baselines3[extra]==1.8.0
+sb3-contrib==1.8.0
+tqdm
+gitpython
+ipython  # interactive notebook
+matplotlib>=3.2.2
+numpy>=1.18.5
+opencv-python==4.8.0.74
+Pillow>=7.1.2
+psutil  # system resources
+PyYAML>=5.3.1
+requests>=2.23.0
+scipy>=1.4.1
+thop>=0.1.1  # FLOPs computation
+tensorboard>=2.4.1
+pandas>=1.1.4
+seaborn>=0.11.0
+scikit-learn
+textdistance>=4.5.0
+bayesian-optimization
+pickle5
+textblob
+swig==3.0.12
+jamspell
+torchmetrics
+gradio
+paddlepaddle
+paddleocr
+altair
+vl-convert-python
