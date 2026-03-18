@@ -15,17 +15,25 @@ from models.memory import Memory
 from data.sentences import Sentences
 import pygame
 from copy import copy
-import jamspell
 import string
 from parameters import *
 from config import DEFAULT_MODEL_DIR, DEFAULT_ROOT_DIR
 import os.path as osp
 from torchmetrics import CharErrorRate
 
-jamspell_corrector = jamspell.TSpellCorrector()
-jamspell_corrector.LoadLangModel('outputs/en.bin')
+try:
+    import jamspell
+    jamspell_corrector = jamspell.TSpellCorrector()
+    jamspell_corrector.LoadLangModel('outputs/en.bin')
+    ites = ["None", "JamSpell"]
+except Exception:
+    class jamspell_corrector:  # noqa: N801 — inline no-op stub
+        @staticmethod
+        def FixFragment(text):
+            return text
+    ites = ["None"]
+
 translator = str.maketrans('', '', string.punctuation)
-ites = ["None", "JamSpell"] # "Norvig",
 
 class InternalEnv(KeyboardEnv):
     def __init__(self, render_mode=None, img_folder='kbd1k/keyboard_dataset', position_file = 'kbd1k/keyboard_label.csv', text_path='./data/sentences_fin.txt', vision_path='outputs/vision_agent.pt', finger_path='outputs/finger_agent.pt', chars = CHARS, places = PLACES, keys = KEYS, width = 256, height = 455, ite = False, finger_size = 32, gaze_size = 64, parameters = None):
