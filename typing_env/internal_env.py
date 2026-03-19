@@ -414,7 +414,7 @@ class InternalEnv(KeyboardEnv):
             print("recall text:", self.wm.recall())
 
     def _render_frame(self):
-        render_fps = 20 # 50ms per timestep
+        render_fps = 6 # ~8x slower than real-time for demo visibility
         resize_factor = 2
         if self.window is None and self.render_mode == "human":
             pygame.init()

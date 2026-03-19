@@ -26,6 +26,29 @@ backspace('<'), enter('>') and space(' ')
 for kalq keyboard, ' ' is left space, '  'is right space
 """
 
+LEFT_HAND_KEYS  = frozenset({'q','w','e','r','t','a','s','d','f','g','z','x','c','v','b'})
+RIGHT_HAND_KEYS = frozenset({'y','u','i','o','p','h','j','k','l','n','m',' ','<','>'})
+
+CHORD_DICT = {
+    # common words
+    "the":   ('t', 'h'),
+    "and":   ('a', 'n'),
+    "with":  ('w', 'h'),
+    "have":  ('v', 'h'),
+    "from":  ('f', 'm'),
+    "been":  ('b', 'n'),
+    "some":  ('s', 'm'),
+    "will":  ('w', 'l'),
+    "when":  ('w', 'n'),
+    "could": ('c', 'l'),
+    "time":  ('t', 'm'),
+    "they":  ('t', 'y'),
+    # common suffixes
+    "ing":   ('g', 'i'),
+    "tion":  ('t', 'n'),
+    "ment":  ('v', 'n'),
+}
+
 keys_for_labeling = ['screenshot_name', 'keyboard_name', 'keyboard_index',
                      # basic info about the screenshot
                      'text', 'theme', 'border', 'mode', 'number_row', 'word_prediction',

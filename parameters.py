@@ -41,6 +41,10 @@ def time_penalty(target_text, duration):
     penalty = (duration / len(target_text)) / 1000 # NORMALIZED_TIME_PENALTY, 1000ms => 1s
     return penalty
 
+# Chord memory parameters
+CHORD_LEARNING_RATE    = 0.25  # strength boost per successful chord use
+CHORD_INITIAL_STRENGTH = 0.0   # user starts with no chords memorized
+
 # parameters
 memory_p = 0.32052004358604397
 finger_p = 0.4075566536411429

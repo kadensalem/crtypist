@@ -109,3 +109,28 @@ class Metrics:
 
     def _distance(self, point_A, point_B):
         return np.linalg.norm(point_A - point_B)
+
+
+class ChordMetrics(Metrics):
+    """
+    Extends Metrics with chord-specific statistics for HybridInternalEnv logs.
+    """
+
+    def chord_use_rate(self):
+        """Fraction of target words typed via chord (not sequential)."""
+        chord_count = sum(1 for e in self.log if e.get('chord'))
+        total_words = len(self.target_text.split())
+        return chord_count / total_words if total_words else 0.0
+
+    def chord_wpm_contribution(self):
+        """WPM attributable to chord events alone."""
+        chord_chars = sum(len(e['chord_word']) for e in self.log if e.get('chord'))
+        time_s = MS_PER_STEP * len(self.log) / 1000
+        return (chord_chars / 5) / time_s * 60 if time_s > 0 else 0.0
+
+    def summary(self):
+        base = super().summary()
+        base['chord_count']            = sum(1 for e in self.log if e.get('chord'))
+        base['chord_use_rate']         = self.chord_use_rate()
+        base['chord_wpm_contribution'] = self.chord_wpm_contribution()
+        return base

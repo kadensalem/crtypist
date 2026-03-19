@@ -24,9 +24,10 @@ from models.memory import Memory, MemoryEncoder
 from typing_env.vision_env import VisionEnv
 from typing_env.finger_env import FingerEnv
 from typing_env.internal_env import InternalEnv
+from typing_env.hybrid_env import HybridInternalEnv
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import save_image
-from metrics import Metrics
+from metrics import Metrics, ChordMetrics
 from tqdm import tqdm
 from setting import KEYS, KEYS_FIN, PLACES, PLACES_FIN, CHARS, CHARS_FIN, KEYS_KALQ, PLACES_KALQ, CHARS_KALQ
 from copy import copy
@@ -72,6 +73,8 @@ parser.add_argument('--peripheral-encoder-path', type=str, default='outputs/p_en
 parser.add_argument('--peripheral-decoder-path', type=str, default='outputs/p_decoder.pt', metavar='path',
                     help='path for the peripheral decoder')
 parser.add_argument("--gboard", action="store_true", default=False, help="train and test on Gboard")
+parser.add_argument("--chord", action="store_true", default=False, help="use hybrid chord/sequential typing (HybridInternalEnv)")
+parser.add_argument("--chord-vocab", type=int, default=15, metavar='N', help="limit chord vocabulary to top N entries by word length (default: all)")
 
 args = parser.parse_args()
 
@@ -407,9 +410,12 @@ elif args.evaluate:
         print("memory loss: ", loss.item())
 
     elif args.supervisor_agent:
-        env = InternalEnv(img_folder='kbd1k/gboard/', position_file='kbd1k/keyboard_label.csv',
-                                text_path='./data/sentences.txt', vision_path='outputs/vision_agent.pt',
-                                finger_path='outputs/finger_agent.pt', chars=CHARS, places=PLACES, keys=KEYS)
+        EnvClass = HybridInternalEnv if args.chord else InternalEnv
+        MetricsClass = ChordMetrics if args.chord else Metrics
+
+        env = EnvClass(img_folder='kbd1k/gboard/', position_file='kbd1k/keyboard_label.csv',
+                       text_path='./data/sentences.txt', vision_path='outputs/vision_agent.pt',
+                       finger_path='outputs/finger_agent.pt', chars=CHARS, places=PLACES, keys=KEYS)
         agent = SupervisorAgent(env=env, load='outputs/supervisor_agent.pt')
         results = []
 
@@ -422,10 +428,10 @@ elif args.evaluate:
                 while not done:
                     action, _states = agent.predict(obs, deterministic=True)
                     obs, reward, done, info = env.step(action)
-                metrics = Metrics(log=env.log, target_text=env.target_text)
+                metrics = MetricsClass(log=env.log, target_text=env.target_text)
                 summary = metrics.summary()
                 if summary['char_error_rate'] < 0.2: break # remove outliers
-                # else: continue print("remove outlier") 
+                # else: continue print("remove outlier")
             results.append(summary)
         print("WPM: ", np.mean([result['WPM'] for result in results]), np.std([result['WPM'] for result in results]))
         print("IKI: ", np.mean([result['IKI'] for result in results]), np.std([result['IKI'] for result in results]))
@@ -438,8 +444,17 @@ elif args.evaluate:
         print("gaze_shift: ",
               np.mean([result['gaze_shift'] for result in results]),
               np.std([result['gaze_shift'] for result in results]))
-        
-        
+
+        if args.chord:
+            print("chord_count: ",
+                  np.mean([result['chord_count'] for result in results]),
+                  np.std([result['chord_count'] for result in results]))
+            print("chord_use_rate: ",
+                  np.mean([result['chord_use_rate'] for result in results]),
+                  np.std([result['chord_use_rate'] for result in results]))
+            print("chord_wpm_contribution: ",
+                  np.mean([result['chord_wpm_contribution'] for result in results]),
+                  np.std([result['chord_wpm_contribution'] for result in results]))
 
         print('Average performance')
         results = []
@@ -493,16 +508,17 @@ elif args.evaluate:
         print("WPM: ", np.mean([result['WPM'] for result in results]), np.std([result['WPM'] for result in results]))
 
 elif args.demo:
-    
+    EnvClass = HybridInternalEnv if args.chord else InternalEnv
+
     if args.gboard:
-        env = InternalEnv(img_folder='kbd1k/gboard/', position_file='kbd1k/keyboard_label.csv',
-                            text_path='./data/sentences.txt', vision_path='outputs/vision_agent.pt',
-                            finger_path='outputs/finger_agent.pt', chars=CHARS, places=PLACES, keys=KEYS,
-                            render_mode='human')
+        env = EnvClass(img_folder='kbd1k/gboard/', position_file='kbd1k/keyboard_label.csv',
+                       text_path='./data/sentences.txt', vision_path='outputs/vision_agent.pt',
+                       finger_path='outputs/finger_agent.pt', chars=CHARS, places=PLACES, keys=KEYS,
+                       render_mode='human')
     else:
-        env = InternalEnv(img_folder='kbd1k/keyboard_dataset/', position_file='kbd1k/keyboard_label.csv',
-                            text_path='./data/sentences.txt', vision_path='outputs/vision_agent.pt',
-                            finger_path='outputs/finger_agent.pt', chars=CHARS, keys=KEYS, render_mode='human')
+        env = EnvClass(img_folder='kbd1k/keyboard_dataset/', position_file='kbd1k/keyboard_label.csv',
+                       text_path='./data/sentences.txt', vision_path='outputs/vision_agent.pt',
+                       finger_path='outputs/finger_agent.pt', chars=CHARS, keys=KEYS, render_mode='human')
     agent = SupervisorAgent(env=env, load='outputs/supervisor_agent.pt')
     
     obs = env.reset()
